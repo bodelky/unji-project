@@ -1,0 +1,89 @@
+{
+	"compiler": {
+		"version": "0.8.14+commit.80d49f37"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "operator",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "data",
+						"type": "bytes"
+					}
+				],
+				"name": "onERC721Received",
+				"outputs": [
+					{
+						"internalType": "bytes4",
+						"name": "",
+						"type": "bytes4"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "ERC721 token receiver interface.",
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"NFT-Marketplace/contracts/erc721a/ERC721A.sol": "ERC721A__IERC721Receiver"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"NFT-Marketplace/contracts/erc721a/ERC721A.sol": {
+			"keccak256": "0xcc32c910eb82b61449316763f6b6b767c13b15b13f4676a03503d3dddcd97364",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://1c9fc40461cd5387aeaac5ea2fbf54dcae3250f51df48919412950664be12c80",
+				"dweb:/ipfs/QmQmBvZqwBCnWNMWJVWNDftEYk74C9Gn6vUbS6Tx65kQaE"
+			]
+		},
+		"NFT-Marketplace/contracts/erc721a/IERC721A.sol": {
+			"keccak256": "0xa606700bae4e1854ad3fbc54ec9d789dde8b151eb9cb42ad06f56a9ee5fe3485",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://cba5e7f4df3b28645de729098635f976ebc8ca5ecc1c5b2d6242f3cd617d1226",
+				"dweb:/ipfs/QmYWsZj7NdKDQteV7EVKscVnoTtKRK9RgPzrkn35y9kWYT"
+			]
+		}
+	},
+	"version": 1
+}
