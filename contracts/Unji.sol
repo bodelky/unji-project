@@ -9,11 +9,10 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     enum MintPhase {
         NONE,
-        PAUSED,
-        ALLOWLIST_SALE,
-        PUBLIC_SALE,
-        SOLD_OUT
+        WHITELIST_SALE,
+        PUBLIC_SALE
     }
+
 
     uint16 public constant TOTAL_COLLECTION_SIZE = 5500;
     uint16 public constant WHITELIST_COLLECTION_SIZE = 1000;
@@ -25,12 +24,26 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     mapping(address => bool) public whitelist;
     bool public whitelistActive;
 
-    function grantWhitelist() public isWhitelistActive {
+
+    ////////////////////////
+    // XXXXXXXX FUNCTIONS //
+    ////////////////////////
+
+    /*
+     */
+    function addWhitelist() public isWhitelistActive {
         whitelist[msg.sender] = true;
     }
 
-    function setWhitelist(bool _whitelist) public onlyOwner {
-        whitelistActive = _whitelist;
+    /*
+    */
+    function removeWhitelist(address[] memory addrs) public onlyOwner {
+        if(addrs.length > 0) {
+            revert IncorrectAddress();
+        }
+        for (uint i = 0; i < addrs.length; i++){
+            whitelist[addrs[i]] = false;
+        }
     }
 
     string private baseURI;
@@ -50,21 +63,29 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
         _;
     }
 
-    /**
-     * @param _provenanceHash provenance record
-     */
-    constructor(string memory _provenanceHash) ERC721A("CryptoUnji", "CUNJI") {
+    modifier inMintPhase(MintPhase _mintPhase) {
+        if (mintPhase != _mintPhase) {
+            revert IncorrectMintPhase();
+        }
+        _;
+    }
+
+    // /**
+    //  * @param _provenanceHash provenance record
+    //  */
+    // constructor(string memory _provenanceHash) ERC721A("CryptoUnji", "CUNJI") {
+    constructor() ERC721A("CryptoUnji", "CUNJI") {
         whitelistActive = false;
-        provenanceHash = _provenanceHash;
+        // provenanceHash = _provenanceHash;
     }
 
     ////////////////////
     // MINT FUNCTIONS //
     ////////////////////
 
-    function whitelistMint(uint16 quantity) external payable nonReentrant {
+    function whitelistMint(uint16 quantity) external payable nonReentrant inMintPhase(MintPhase.WHITELIST_SALE) {
         require(whitelist[msg.sender], "You are not in whitelist!!");
-        require(msg.value > MINT_PRICE_WHITELIST, "Insufficient value");
+        require(msg.value >= MINT_PRICE_WHITELIST, "Insufficient value");
         _safeMint(msg.sender, quantity);
     }
 
@@ -72,8 +93,8 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
      * @notice Mint a quantity of tokens during public mint phase
      * @param _quantity Number of tokens to mint
      */
-    function mint(uint16 _quantity) external payable nonReentrant {
-        require(msg.value > MINT_PRICE_PUBLIC, "Insufficient value");
+    function mint(uint16 _quantity) external payable nonReentrant inMintPhase(MintPhase.PUBLIC_SALE){
+        require(msg.value >= MINT_PRICE_PUBLIC, "Insufficient value");
 
         _safeMint(msg.sender, _quantity);
     }
@@ -92,26 +113,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice Add entries to the maxAllowlistRedemptions mapping
-     * @notice Use restricted to contract owner
-     * @dev Array arguments must have the same ordering, as _addresses[i] will map to _redemptions[i]
-     * @param _addresses Array containing addresses to add (keys)
-     * @param _redemptions Array containing numbers of redemptions (values)
-     */
-    function setMaxAllowlistRedemptions(
-        address[] calldata _addresses,
-        uint8[] calldata _redemptions
-    ) external onlyOwner {
-        if (_addresses.length != _redemptions.length) {
-            revert BadArguments();
-        }
-
-        for (uint256 i = 0; i < _addresses.length; i++) {
-            maxAllowlistRedemptions[_addresses[i]] = _redemptions[i];
-        }
-    }
-
-    /**
      * @notice Set the contract base token uri
      * @notice Use restricted to contract owner
      * @param _baseTokenURI New base token uri
@@ -120,97 +121,15 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
         baseURI = _baseTokenURI;
     }
 
-    /**
-     * @notice Set starting index into previously-ordered metadata for reveal
-     */
-    function setInitialMetadataSequenceIndex() private {
-        initialMetadataSequenceIndex =
-            uint256(blockhash(block.number - 1)) %
-            COLLECTION_SIZE;
+    function setWhitelist(bool _whitelist) public onlyOwner {
+        whitelistActive = _whitelist;
     }
 
-    /**
-     * @notice Increment number of allowlist token mints redeemed by caller
-     * @dev We cast the _numToIncrement argument into uint32, which will not be an issue as
-     * mint quantity should never be greater than 2^32 - 1.
-     * @dev Number of redemptions are stored in ERC721A auxillary storage, which can help
-     * remove an extra cold SLOAD and SSTORE operation. Since we're storing two values
-     * (public and allowlist redemptions) we need to pack and unpack two uint32s into a single uint64.
-     * See https://chiru-labs.github.io/ERC721A/#/erc721a?id=addressdata
-     */
-    function incrementRedemptionsAllowlist(uint256 _numToIncrement) private {
-        (
-            uint32 allowlistMintRedemptions,
-            uint32 publicMintRedemptions
-        ) = unpackMintRedemptions(_getAux(msg.sender));
-        allowlistMintRedemptions += uint32(_numToIncrement);
-        _setAux(
-            msg.sender,
-            packMintRedemptions(allowlistMintRedemptions, publicMintRedemptions)
-        );
-    }
-
-    /**
-     * @notice Increment number of public token mints redeemed by caller
-     * @dev We cast the _numToIncrement argument into uint32, which will not be an issue as
-     * mint quantity should never be greater than 2^32 - 1.
-     * @dev Number of redemptions are stored in ERC721A auxillary storage, which can help
-     * remove an extra cold SLOAD and SSTORE operation. Since we're storing two values
-     * (public and allowlist redemptions) we need to pack and unpack two uint32s into a single uint64.
-     * See https://chiru-labs.github.io/ERC721A/#/erc721a?id=addressdata
-     */
-    function incrementRedemptionsPublic(uint256 _numToIncrement) private {
-        (
-            uint32 allowlistMintRedemptions,
-            uint32 publicMintRedemptions
-        ) = unpackMintRedemptions(_getAux(msg.sender));
-        publicMintRedemptions += uint32(_numToIncrement);
-        _setAux(
-            msg.sender,
-            packMintRedemptions(allowlistMintRedemptions, publicMintRedemptions)
-        );
-    }
 
     //////////////////////
     // GETTER FUNCTIONS //
     //////////////////////
 
-    /**
-     * @notice Unpack and get number of allowlist token mints redeemed by caller
-     * @return number of allowlist redemptions used
-     * @dev Number of redemptions are stored in ERC721A auxillary storage, which can help
-     * remove an extra cold SLOAD and SSTORE operation. Since we're storing two values
-     * (public and allowlist redemptions) we need to pack and unpack two uint32s into a single uint64.
-     * See https://chiru-labs.github.io/ERC721A/#/erc721a?id=addressdata
-     */
-    function getRedemptionsAllowlist() public view returns (uint32) {
-        (uint32 allowlistMintRedemptions, ) = unpackMintRedemptions(
-            _getAux(msg.sender)
-        );
-        return allowlistMintRedemptions;
-    }
-
-    /**
-     * @notice Unpack and get number of public token mints redeemed by caller
-     * @return number of public redemptions used
-     * @dev Number of redemptions are stored in ERC721A auxillary storage, which can help
-     * remove an extra cold SLOAD and SSTORE operation. Since we're storing two values
-     * (public and allowlist redemptions) we need to pack and unpack two uint32s into a single uint64.
-     * See https://chiru-labs.github.io/ERC721A/#/erc721a?id=addressdata
-     */
-    function getRedemptionsPublic() public view returns (uint32) {
-        (, uint32 publicMintRedemptions) = unpackMintRedemptions(
-            _getAux(msg.sender)
-        );
-        return publicMintRedemptions;
-    }
-
-    /**
-     * @return Current mint phase
-     */
-    function getMintPhase() public view returns (MintPhase) {
-        return mintPhase;
-    }
 
     /**
      * @return Current base token uri
@@ -223,33 +142,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     // HELPER FUNCTIONS //
     //////////////////////
 
-    /**
-     * @notice Pack two uint32s (allowlist and public redemptions) into a single uint64 value
-     * @return Packed value
-     * @dev Performs shift and bit operations to pack two uint32s into a single uint64
-     */
-    function packMintRedemptions(
-        uint32 _allowlistMintRedemptions,
-        uint32 _publicMintRedemptions
-    ) private pure returns (uint64) {
-        return
-            (uint64(_allowlistMintRedemptions) << 32) |
-            uint64(_publicMintRedemptions);
-    }
-
-    /**
-     * @notice Unpack a single uint64 value into two uint32s (allowlist and public redemptions)
-     * @return allowlistMintRedemptions publicMintRedemptions Unpacked values
-     * @dev Performs shift and bit operations to unpack a single uint64 into two uint32s
-     */
-    function unpackMintRedemptions(uint64 _mintRedemptionPack)
-        private
-        pure
-        returns (uint32 allowlistMintRedemptions, uint32 publicMintRedemptions)
-    {
-        allowlistMintRedemptions = uint32(_mintRedemptionPack >> 32);
-        publicMintRedemptions = uint32(_mintRedemptionPack);
-    }
 
     /////////////////////
     // ADMIN FUNCTIONS //
@@ -267,14 +159,22 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     function devMint(uint256 _quantity)
         external
         onlyOwner
-        inMintPhase(MintPhase.NONE)
     {
-        if (totalSupply() + _quantity > COLLECTION_SIZE) {
+        if (totalSupply() + _quantity > TOTAL_COLLECTION_SIZE) {
             revert InsufficientSupply();
         }
 
         _safeMint(owner(), _quantity);
     }
+
+    /*
+    */
+    function bulkTransfer(address from, address to, uint256[] memory tokenIds) public onlyOwner {
+        for(uint i = 0; i < tokenIds.length ; i++ ) {
+            safeTransferFrom((from), to, tokenIds[i]);
+        }
+    }
+
 
     /**
      * @notice Withdraw all funds to the contract owners address
@@ -308,6 +208,12 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
         revert NotImplemented();
     }
 }
+
+/**
+* Incorrect input addresses
+*/
+error IncorrectAddress();
+
 
 /**
  * Incorrect mint phase for action
