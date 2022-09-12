@@ -13,21 +13,58 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
         PUBLIC_SALE
     }
 
+    MintPhase public mintPhase = MintPhase.NONE;
+    uint16 public constant TOTAL_COLLECTION_SIZE = 10;
+    uint16 public constant WHITELIST_COLLECTION_SIZE = 5;
 
-    uint16 public constant TOTAL_COLLECTION_SIZE = 5500;
-    uint16 public constant WHITELIST_COLLECTION_SIZE = 1000;
-
-    // uint8 public constant MAX_PER_ADDRESS_PUBLIC = 10;
-    uint256 public constant MINT_PRICE_PUBLIC = 0.05 ether;
-    uint256 public constant MINT_PRICE_WHITELIST = 0.025 ether;
+    uint256 public constant MINT_PRICE_PUBLIC = 0.05 ether; // 0.05
+    uint256 public constant MINT_PRICE_WHITELIST = 0.025 ether; // 0.025
 
     mapping(address => bool) public whitelist;
     bool public whitelistActive;
+    uint256 public whitelistCounter;
 
+    string private baseURI;
 
     ////////////////////////
-    // XXXXXXXX FUNCTIONS //
+    // MODIFIER FUNCTIONS //
     ////////////////////////
+
+    modifier mintCondition(uint256 quantity) {
+        require(totalSupply() < TOTAL_COLLECTION_SIZE, "NFT Already sold out");
+        require(totalSupply() + quantity <= TOTAL_COLLECTION_SIZE, "Cannot mint over supply");
+        _;
+    }
+
+    modifier whitelistCondition(uint256 quantity) {
+        require(whitelistCounter < WHITELIST_COLLECTION_SIZE, "Whitelist NFT already Sold out");
+        require(whitelistCounter + quantity <= WHITELIST_COLLECTION_SIZE, "Cannot mint over whitelist supply");
+        _;
+    }
+
+    /*
+     */
+    modifier isWhitelistActive() {
+        require(whitelistActive, "Not in whitelist period");
+        _;
+    }
+
+    modifier inMintPhase(MintPhase _mintPhase) {
+        require(mintPhase == _mintPhase, "Not correct mint phase");
+        _;
+    }
+
+    /*
+     */
+    // constructor() ERC721A("CryptoUnji", "CUNJI") {
+    constructor() ERC721A("CryptoUnji", "CUNJI") {
+        whitelistActive = false;
+        whitelistCounter = 0;
+    }
+
+    /////////////////////////
+    // WHITELIST FUNCTIONS //
+    /////////////////////////
 
     /*
      */
@@ -38,65 +75,31 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     /*
     */
     function removeWhitelist(address[] memory addrs) public onlyOwner {
-        if(addrs.length > 0) {
-            revert IncorrectAddress();
-        }
+        require(addrs.length > 0, "Please input address");
         for (uint i = 0; i < addrs.length; i++){
             whitelist[addrs[i]] = false;
         }
-    }
-
-    string private baseURI;
-    string public provenanceHash;
-    uint256 public initialMetadataSequenceIndex;
-    MintPhase public mintPhase = MintPhase.NONE;
-    mapping(address => uint8) public maxAllowlistRedemptions;
-
-    ////////////////////////
-    // MODIFIER FUNCTIONS //
-    ////////////////////////
-
-    /*
-     */
-    modifier isWhitelistActive() {
-        require(whitelistActive, "Not in whitelist period");
-        _;
-    }
-
-    modifier inMintPhase(MintPhase _mintPhase) {
-        if (mintPhase != _mintPhase) {
-            revert IncorrectMintPhase();
-        }
-        _;
-    }
-
-    // /**
-    //  * @param _provenanceHash provenance record
-    //  */
-    // constructor(string memory _provenanceHash) ERC721A("CryptoUnji", "CUNJI") {
-    constructor() ERC721A("CryptoUnji", "CUNJI") {
-        whitelistActive = false;
-        // provenanceHash = _provenanceHash;
     }
 
     ////////////////////
     // MINT FUNCTIONS //
     ////////////////////
 
-    function whitelistMint(uint16 quantity) external payable nonReentrant inMintPhase(MintPhase.WHITELIST_SALE) {
+    function whitelistMint(uint16 quantity) external payable nonReentrant inMintPhase(MintPhase.WHITELIST_SALE) whitelistCondition(quantity){
         require(whitelist[msg.sender], "You are not in whitelist!!");
         require(msg.value >= MINT_PRICE_WHITELIST, "Insufficient value");
         _safeMint(msg.sender, quantity);
+        whitelistCounter += quantity;
     }
 
     /**
      * @notice Mint a quantity of tokens during public mint phase
-     * @param _quantity Number of tokens to mint
+     * @param quantity Number of tokens to mint
      */
-    function mint(uint16 _quantity) external payable nonReentrant inMintPhase(MintPhase.PUBLIC_SALE){
+    function mint(uint16 quantity) external payable nonReentrant inMintPhase(MintPhase.PUBLIC_SALE) mintCondition(quantity) {
         require(msg.value >= MINT_PRICE_PUBLIC, "Insufficient value");
 
-        _safeMint(msg.sender, _quantity);
+        _safeMint(msg.sender, quantity);
     }
 
     //////////////////////
@@ -117,7 +120,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
      * @notice Use restricted to contract owner
      * @param _baseTokenURI New base token uri
      */
-    function setBaseURI(string calldata _baseTokenURI) external onlyOwner {
+    function setBaseURI(string memory _baseTokenURI) external onlyOwner {
         baseURI = _baseTokenURI;
     }
 
@@ -147,29 +150,9 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     // ADMIN FUNCTIONS //
     /////////////////////
 
-    /**
-     * @notice Mint a quantity of tokens to the contract owners address
-     * @notice Use restricted to contract owner
-     * @param _quantity Number of tokens to mint
-     * @dev Must be executed in `MintPhase.NONE` (i.e., before allowlist or public mint begins)
-     * @dev Minting in batches will not help prevent overly expensive transfer fees, since
-     * token ids are sequential and dev minting occurs before allowlist and public minting.
-     * See https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size
-     */
-    function devMint(uint256 _quantity)
-        external
-        onlyOwner
-    {
-        if (totalSupply() + _quantity > TOTAL_COLLECTION_SIZE) {
-            revert InsufficientSupply();
-        }
-
-        _safeMint(owner(), _quantity);
-    }
-
     /*
     */
-    function bulkTransfer(address from, address to, uint256[] memory tokenIds) public onlyOwner {
+    function bulkTransfer(address from, address to, uint256[] memory tokenIds) public {
         for(uint i = 0; i < tokenIds.length ; i++ ) {
             safeTransferFrom((from), to, tokenIds[i]);
         }
@@ -209,56 +192,13 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard {
     }
 }
 
-/**
-* Incorrect input addresses
-*/
-error IncorrectAddress();
 
-
-/**
- * Incorrect mint phase for action
- */
-error IncorrectMintPhase();
-
-/**
- * Incorrect payment amount
- */
-error IncorrectPayment();
-
-/**
- * Insufficient supply for action
- */
-error InsufficientSupply();
-
-/**
- * Not allowlisted
- */
-error NotAllowlisted();
-
-/**
- * Exceeds max allocation for public sale
- */
-error ExceedsPublicMaxAllocation();
-
-/**
- * Exceeds max allocation for allowlist sale
- */
-error ExceedsAllowlistMaxAllocation();
-
-/**
- * Public mint price not set
- */
-error PublicMintPriceNotSet();
 
 /**
  * Transfer failed
  */
 error TransferFailed();
 
-/**
- * Bad arguments
- */
-error BadArguments();
 
 /**
  * Function not implemented

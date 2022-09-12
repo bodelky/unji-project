@@ -5,8 +5,8 @@
 [33m[WARN] Any application that runs on your computer can potentially read from and write to all files in the directory.[0m
 [33m[WARN] Symbolic links are not forwarded to Remix IDE
 [0m
-[32m[INFO] Tue Sep 06 2022 23:29:19 GMT+0700 (Indochina Time) remixd is listening on 127.0.0.1:65520[0m
-[32m[INFO] Tue Sep 06 2022 23:29:19 GMT+0700 (Indochina Time) slither is listening on 127.0.0.1:65523[0m
+[32m[INFO] Mon Sep 12 2022 16:46:16 GMT+0700 (Indochina Time) remixd is listening on 127.0.0.1:65520[0m
+[32m[INFO] Mon Sep 12 2022 16:46:16 GMT+0700 (Indochina Time) slither is listening on 127.0.0.1:65523[0m
 [33m[WARN] You may now only use IDE at https://remix.ethereum.org to connect to that instance[0m
 setup notifications for C:\Users\bodel\Desktop\blockchain\unji-project
 [33m[WARN] You may now only use IDE at https://remix.ethereum.org to connect to that instance[0m

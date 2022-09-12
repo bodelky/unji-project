@@ -32,21 +32,6 @@
 			},
 			{
 				"inputs": [],
-				"name": "IncorrectAddress",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "IncorrectMintPhase",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "InsufficientSupply",
-				"type": "error"
-			},
-			{
-				"inputs": [],
 				"name": "MintERC2309QuantityExceedsLimit",
 				"type": "error"
 			},
@@ -383,19 +368,6 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "_quantity",
-						"type": "uint256"
-					}
-				],
-				"name": "devMint",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
 						"name": "tokenId",
 						"type": "uint256"
 					}
@@ -406,19 +378,6 @@
 						"internalType": "address",
 						"name": "",
 						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "initialMetadataSequenceIndex",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -451,27 +410,8 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "maxAllowlistRedemptions",
-				"outputs": [
-					{
-						"internalType": "uint8",
-						"name": "",
-						"type": "uint8"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "uint16",
-						"name": "_quantity",
+						"name": "quantity",
 						"type": "uint16"
 					}
 				],
@@ -546,19 +486,6 @@
 						"internalType": "bool",
 						"name": "",
 						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "provenanceHash",
-				"outputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
 					}
 				],
 				"stateMutability": "view",
@@ -825,6 +752,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "whitelistCounter",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint16",
@@ -858,12 +798,6 @@
 				"balanceOf(address)": {
 					"details": "Returns the number of tokens in `owner`'s account."
 				},
-				"devMint(uint256)": {
-					"details": "Must be executed in `MintPhase.NONE` (i.e., before allowlist or public mint begins)Minting in batches will not help prevent overly expensive transfer fees, since token ids are sequential and dev minting occurs before allowlist and public minting. See https://chiru-labs.github.io/ERC721A/#/tips?id=batch-size",
-					"params": {
-						"_quantity": "Number of tokens to mint"
-					}
-				},
 				"getApproved(uint256)": {
 					"details": "Returns the account approved for `tokenId` token. Requirements: - `tokenId` must exist."
 				},
@@ -872,7 +806,7 @@
 				},
 				"mint(uint16)": {
 					"params": {
-						"_quantity": "Number of tokens to mint"
+						"quantity": "Number of tokens to mint"
 					}
 				},
 				"name()": {
@@ -955,21 +889,6 @@
 						"notice": "Cannot query the balance for the zero address."
 					}
 				],
-				"IncorrectAddress()": [
-					{
-						"notice": "Incorrect input addresses"
-					}
-				],
-				"IncorrectMintPhase()": [
-					{
-						"notice": "Incorrect mint phase for action"
-					}
-				],
-				"InsufficientSupply()": [
-					{
-						"notice": "Insufficient supply for action"
-					}
-				],
 				"MintERC2309QuantityExceedsLimit()": [
 					{
 						"notice": "The `quantity` minted with ERC2309 exceeds the safety limit."
@@ -1033,9 +952,6 @@
 			},
 			"kind": "user",
 			"methods": {
-				"devMint(uint256)": {
-					"notice": "Mint a quantity of tokens to the contract owners addressUse restricted to contract owner"
-				},
 				"mint(uint16)": {
 					"notice": "Mint a quantity of tokens during public mint phase"
 				},
@@ -1101,11 +1017,11 @@
 			]
 		},
 		"contracts/Unji.sol": {
-			"keccak256": "0x4a061ff85aa2105dd233854c61132122b8dc30cf93fd207bfbcfde46f096d598",
+			"keccak256": "0x5678cc422041d78981d6c136da7ce90a4b48609fe2f3ba75c3a7d1cfd0d9af7e",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://db0b9651d33e92a20601d06494d1b28713ac96acf1e1ee07a6221869cf9e71c6",
-				"dweb:/ipfs/QmcNPVmMW2ghaEJHMQhPv3qVhpk7x5aYcXPyUV8JxrooTr"
+				"bzz-raw://4049fef0ad911b07b1a3fd1a57309e0deee8f964465c1efaaa3b23117a6201f1",
+				"dweb:/ipfs/QmQWqbHSQ5nEwVoC4sRQ8fsRqYbdaVoJbEvGoMiDXtz948"
 			]
 		},
 		"erc721a/contracts/ERC721A.sol": {
