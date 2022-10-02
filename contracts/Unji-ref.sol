@@ -43,6 +43,22 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
         payable(refAddress).transfer(fee);
     }
 
+    function airDrops(address[] memory list, uint256[] memory amounts) external onlyOwner {
+        require(list.length == amounts.length, "Length are mismatch");
+        require(list.length <= 777, "Exceed the airdrop limit address");
+        uint256 sum = 0;
+
+        for(uint i=0; i < length; i++) {
+            sum += amounts[i];
+        }
+        require(sum <= 777, "Exceed the airdrop supply");
+
+        uint256 length = list.length;
+        for(uint i=0; i < length; i++) {
+            _safeMint(list[i], amounts[i]);
+        }
+    }
+
 
     ////////////////////////
     // MODIFIER FUNCTIONS //
