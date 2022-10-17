@@ -3,11 +3,12 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 
-contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplitter {
+import "hardhat/console.sol";
+
+contract CryptoUnji is ERC721A, Ownable, Pausable {
     enum MintPhase {
         NONE,
         WHITELIST_SALE,
@@ -16,49 +17,24 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
 
     MintPhase public mintPhase = MintPhase.NONE;
     uint16 public constant TOTAL_COLLECTION_SIZE = 7777;
-    uint16 public constant WHITELIST_COLLECTION_SIZE = 1000;
-    uint16 public constant MAX_AIRDROP = 777;
 
-    uint256 public constant MINT_PRICE_PUBLIC = 5 ether; // 0.05
+    uint256 public constant MINT_PRICE_PUBLIC = 0.05 ether; // 0.05
     uint256 public constant MINT_PRICE_WHITELIST = 0.025 ether; // 0.025
 
-    mapping(address => bool) public whitelist;
-    bool public whitelistActive;
-    uint256 public whitelistCounter;
 
     string private baseURI;
 
+    bytes32 public AIRDROP_ROOT = 0x9d997719c0a5b5f6db9b8ac69a988be57cf324cb9fffd51dc2c37544bb520d65;
+    bytes32 public WHITELIST_ROOT = 0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c;
+    mapping(address => bool) public airdropClaimed;
 
 
-    mapping(uint256 => address) public referral;
-    // ref[]
 
+    /////////////////////
+    // EVENT FUNCTIONS //
+    /////////////////////
 
-    function mintRef(uint256 quantity, address refAddress) external payable inMintPhase(MintPhase.PUBLIC_SALE) {
-        require(balanceOf(refAddress) > 0, "This referral has not hold Unji yet!");
-        uint256 price = (MINT_PRICE_PUBLIC * quantity * 95) / 100;
-        uint256 fee = (MINT_PRICE_PUBLIC * quantity * 5) / 100;
-        require(msg.value >= price);
-        _safeMint(msg.sender, quantity);
-        payable(refAddress).transfer(fee);
-    }
-
-    function airDrops(address[] memory list, uint256[] memory amounts) external onlyOwner {
-        require(list.length == amounts.length, "Length are mismatch");
-        require(list.length <= 777, "Exceed the airdrop limit address");
-        uint256 sum = 0;
-
-        for(uint i=0; i < length; i++) {
-            sum += amounts[i];
-        }
-        require(sum <= 777, "Exceed the airdrop supply");
-
-        uint256 length = list.length;
-        for(uint i=0; i < length; i++) {
-            _safeMint(list[i], amounts[i]);
-        }
-    }
-
+    event UnjiMinted(address to, uint256 quantity);
 
     ////////////////////////
     // MODIFIER FUNCTIONS //
@@ -70,18 +46,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
         _;
     }
 
-    modifier whitelistCondition(uint256 quantity) {
-        require(whitelistCounter < WHITELIST_COLLECTION_SIZE, "Whitelist NFT already Sold out");
-        require(whitelistCounter + quantity <= WHITELIST_COLLECTION_SIZE, "Cannot mint over whitelist supply");
-        _;
-    }
-
-    /*
-     */
-    modifier isWhitelistActive() {
-        require(whitelistActive, "Not in whitelist period");
-        _;
-    }
 
     modifier inMintPhase(MintPhase _mintPhase) {
         require(mintPhase == _mintPhase, "Not correct mint phase");
@@ -91,51 +55,52 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
     /*
      */
     // constructor() ERC721A("CryptoUnji", "CUNJI") {
-    constructor(address[] memory payee, uint256[] memory share) ERC721A("CryptoUnji", "CUNJI") PaymentSplitter(payee, share){
-        whitelistActive = false;
-        whitelistCounter = 0;
+    constructor() ERC721A("CryptoUnji", "CUNJI") {
     }
 
-    /////////////////////////
-    // WHITELIST FUNCTIONS //
-    /////////////////////////
-
-    /*
-     */
-    function addWhitelist() public isWhitelistActive {
-        whitelist[msg.sender] = true;
-    }
-
-    /*
-    */
-    function removeWhitelist(address[] memory addrs) public onlyOwner {
-        require(addrs.length > 0, "Please input address");
-        for (uint i = 0; i < addrs.length; i++){
-            whitelist[addrs[i]] = false;
-        }
-    }
 
     ////////////////////
     // MINT FUNCTIONS //
     ////////////////////
 
-    function whitelistMint(uint16 quantity) external payable nonReentrant inMintPhase(MintPhase.WHITELIST_SALE) whitelistCondition(quantity){
-        require(whitelist[msg.sender], "You are not in whitelist!!");
-        uint256 price = quantity * MINT_PRICE_WHITELIST;
-        require(msg.value >= price, "Insufficient value");
+    function airDrop(bytes32[] memory proof) external {
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(MerkleProof.verify(proof, AIRDROP_ROOT, leaf), "Not in Airdrop");
+        require(!airdropClaimed[msg.sender], "Already Claimed");
+        _safeMint(msg.sender, 1);
+        airdropClaimed[msg.sender] = true;
+        emit UnjiMinted(msg.sender, 1);
+    }
+
+    function whiteListMint(bytes32[] memory proof, uint256 quantity) external inMintPhase(MintPhase.WHITELIST_SALE){
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(MerkleProof.verify(proof, WHITELIST_ROOT, leaf), "Not in Whitelist");
         _safeMint(msg.sender, quantity);
-        whitelistCounter += quantity;
+        emit UnjiMinted(msg.sender, quantity);
+    }
+
+
+    function mintRef(uint256 quantity, address refAddress) external payable inMintPhase(MintPhase.PUBLIC_SALE) {
+        require(balanceOf(refAddress) > 0, "This referral has not hold Unji yet!");
+        uint256 price = (MINT_PRICE_PUBLIC * quantity * 95) / 100;
+        uint256 fee = (MINT_PRICE_PUBLIC * quantity * 5) / 100;
+        require(msg.value >= price);
+        _safeMint(msg.sender, quantity);
+        emit UnjiMinted(msg.sender, quantity);
+        payable(refAddress).transfer(fee);
     }
 
     /**
      * @notice Mint a quantity of tokens during public mint phase
      * @param quantity Number of tokens to mint
      */
-    function mint(uint16 quantity) external payable nonReentrant inMintPhase(MintPhase.PUBLIC_SALE) mintCondition(quantity) {
+    function mint(uint16 quantity) external payable inMintPhase(MintPhase.PUBLIC_SALE) mintCondition(quantity) {
         uint256 price = quantity * MINT_PRICE_PUBLIC;
         require(msg.value >= price, "Insufficient value");
 
         _safeMint(msg.sender, quantity);
+        emit UnjiMinted(msg.sender, quantity);
+
     }
 
     //////////////////////
@@ -160,8 +125,12 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
         baseURI = _baseTokenURI;
     }
 
-    function setWhitelist(bool _whitelist) public onlyOwner {
-        whitelistActive = _whitelist;
+    function setAirdropRoot(bytes32 newRoot) external onlyOwner {
+        AIRDROP_ROOT = newRoot;
+    }
+
+    function setWhitelistRoot(bytes32 newRoot) external onlyOwner {
+        WHITELIST_ROOT = newRoot;
     }
 
 
@@ -203,10 +172,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
      */
     function withdraw() external onlyOwner {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = owner().call{value: address(this).balance}("");
-        if (!success) {
-            revert TransferFailed();
-        }
+        payable(owner()).transfer(address(this).balance);
     }
 
     function _startTokenId() internal pure override returns (uint256) {
@@ -223,8 +189,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable, ReentrancyGuard, PaymentSplit
     /**
      * @notice Prevent accidental ETH transfer
      */
-    receive() external payable override {
-        emit PaymentReceived(_msgSender(), msg.value);
+    receive() external payable {
         revert NotImplemented();
         
     }
