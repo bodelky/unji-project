@@ -24,7 +24,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
 
     string private baseURI;
 
-    bytes32 public AIRDROP_ROOT = 0x9d997719c0a5b5f6db9b8ac69a988be57cf324cb9fffd51dc2c37544bb520d65;
+    bytes32 public AIRDROP_ROOT = 0x74f4666169faccda89a45d47ab1997a62f24c3cd534a01539db8f0e40d3eb8b1;
     bytes32 public WHITELIST_ROOT = 0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c;
     mapping(address => bool) public airdropClaimed;
 
@@ -54,8 +54,8 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
 
     /*
      */
-    // constructor() ERC721A("CryptoUnji", "CUNJI") {
     constructor() ERC721A("CryptoUnji", "CUNJI") {
+        _safeMint(msg.sender, 6);
     }
 
 
@@ -72,14 +72,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         emit UnjiMinted(msg.sender, 1);
     }
 
-    function whiteListMint(bytes32[] memory proof, uint256 quantity) external inMintPhase(MintPhase.WHITELIST_SALE){
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(proof, WHITELIST_ROOT, leaf), "Not in Whitelist");
-        _safeMint(msg.sender, quantity);
-        emit UnjiMinted(msg.sender, quantity);
-    }
-
-
     function mintRef(uint256 quantity, address refAddress) external payable inMintPhase(MintPhase.PUBLIC_SALE) {
         require(balanceOf(refAddress) > 0, "This referral has not hold Unji yet!");
         uint256 price = (MINT_PRICE_PUBLIC * quantity * 95) / 100;
@@ -88,6 +80,20 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         _safeMint(msg.sender, quantity);
         emit UnjiMinted(msg.sender, quantity);
         payable(refAddress).transfer(fee);
+    }
+
+    /**
+     * @notice Mint a quantity of tokens during whitelist mint phase
+     * @param proof Merkle proof that you are in whitelist
+     * @param quantity Number of tokens to mint
+     */
+    function whiteListMint(bytes32[] memory proof, uint256 quantity) external payable inMintPhase(MintPhase.WHITELIST_SALE){
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(MerkleProof.verify(proof, WHITELIST_ROOT, leaf), "Not in Whitelist");
+        uint256 price = quantity * MINT_PRICE_WHITELIST;
+        require(msg.value >= price, "Insufficient value");
+        _safeMint(msg.sender, quantity);
+        emit UnjiMinted(msg.sender, quantity);
     }
 
     /**
@@ -138,18 +144,12 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     // GETTER FUNCTIONS //
     //////////////////////
 
-
     /**
      * @return Current base token uri
      */
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
-
-    //////////////////////
-    // HELPER FUNCTIONS //
-    //////////////////////
-
 
     /////////////////////
     // ADMIN FUNCTIONS //

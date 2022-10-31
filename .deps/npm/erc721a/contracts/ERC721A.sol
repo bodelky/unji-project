@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ERC721A Contracts v4.2.2
+// ERC721A Contracts v4.2.3
 // Creator: Chiru Labs
 
 pragma solidity ^0.8.4;
@@ -34,7 +34,7 @@ interface ERC721A__IERC721Receiver {
  * - The maximum token ID cannot exceed 2**256 - 1 (max value of uint256).
  */
 contract ERC721A is IERC721A {
-    // Reference type for token approval.
+    // Bypass for a `--via-ir` bug (https://github.com/chiru-labs/ERC721A/pull/364).
     struct TokenApprovalRef {
         address value;
     }
@@ -422,7 +422,7 @@ contract ERC721A is IERC721A {
      *
      * Emits an {Approval} event.
      */
-    function approve(address to, uint256 tokenId) public virtual override {
+    function approve(address to, uint256 tokenId) public payable virtual override {
         address owner = ownerOf(tokenId);
 
         if (_msgSenderERC721A() != owner)
@@ -459,8 +459,6 @@ contract ERC721A is IERC721A {
      * Emits an {ApprovalForAll} event.
      */
     function setApprovalForAll(address operator, bool approved) public virtual override {
-        if (operator == _msgSenderERC721A()) revert ApproveToCaller();
-
         _operatorApprovals[_msgSenderERC721A()][operator] = approved;
         emit ApprovalForAll(_msgSenderERC721A(), operator, approved);
     }
@@ -515,7 +513,7 @@ contract ERC721A is IERC721A {
         returns (uint256 approvedAddressSlot, address approvedAddress)
     {
         TokenApprovalRef storage tokenApproval = _tokenApprovals[tokenId];
-        // The following is equivalent to `approvedAddress = _tokenApprovals[tokenId]`.
+        // The following is equivalent to `approvedAddress = _tokenApprovals[tokenId].value`.
         assembly {
             approvedAddressSlot := tokenApproval.slot
             approvedAddress := sload(approvedAddressSlot)
@@ -543,7 +541,7 @@ contract ERC721A is IERC721A {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) public payable virtual override {
         uint256 prevOwnershipPacked = _packedOwnershipOf(tokenId);
 
         if (address(uint160(prevOwnershipPacked)) != from) revert TransferFromIncorrectOwner();
@@ -609,7 +607,7 @@ contract ERC721A is IERC721A {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) public payable virtual override {
         safeTransferFrom(from, to, tokenId, '');
     }
 
@@ -633,7 +631,7 @@ contract ERC721A is IERC721A {
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) public virtual override {
+    ) public payable virtual override {
         transferFrom(from, to, tokenId);
         if (to.code.length != 0)
             if (!_checkContractOnERC721Received(from, to, tokenId, _data)) {
@@ -763,6 +761,9 @@ contract ERC721A is IERC721A {
             uint256 end = startTokenId + quantity;
 
             // Use assembly to loop and emit the `Transfer` event for gas savings.
+            // The duplicated `log4` removes an extra check and reduces stack juggling.
+            // The assembly, together with the surrounding Solidity code, have been
+            // delicately arranged to nudge the compiler into producing optimized opcodes.
             assembly {
                 // Mask `to` to the lower 160 bits, in case the upper bits somehow aren't clean.
                 toMasked := and(to, _BITMASK_ADDRESS)
@@ -776,6 +777,9 @@ contract ERC721A is IERC721A {
                     startTokenId // `tokenId`.
                 )
 
+                // The `iszero(eq(,))` check ensures that large values of `quantity`
+                // that overflows uint256 will make the loop run out of gas.
+                // The compiler will optimize the `iszero` away for performance.
                 for {
                     let tokenId := add(startTokenId, 1)
                 } iszero(eq(tokenId, end)) {
@@ -1048,13 +1052,17 @@ contract ERC721A is IERC721A {
      */
     function _toString(uint256 value) internal pure virtual returns (string memory str) {
         assembly {
-            // The maximum value of a uint256 contains 78 digits (1 byte per digit),
-            // but we allocate 0x80 bytes to keep the free memory pointer 32-byte word aliged.
-            // We will need 1 32-byte word to store the length,
-            // and 3 32-byte words to store a maximum of 78 digits. Total: 0x20 + 3 * 0x20 = 0x80.
-            str := add(mload(0x40), 0x80)
+            // The maximum value of a uint256 contains 78 digits (1 byte per digit), but
+            // we allocate 0xa0 bytes to keep the free memory pointer 32-byte word aligned.
+            // We will need 1 word for the trailing zeros padding, 1 word for the length,
+            // and 3 words for a maximum of 78 digits. Total: 5 * 0x20 = 0xa0.
+            let m := add(mload(0x40), 0xa0)
             // Update the free memory pointer to allocate.
-            mstore(0x40, str)
+            mstore(0x40, m)
+            // Assign the `str` to the end.
+            str := sub(m, 0x20)
+            // Zeroize the slot after the string.
+            mstore(str, 0)
 
             // Cache the end of the memory to calculate the length later.
             let end := str

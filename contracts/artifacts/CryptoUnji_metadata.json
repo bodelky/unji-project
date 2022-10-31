@@ -22,11 +22,6 @@
 			},
 			{
 				"inputs": [],
-				"name": "ApproveToCaller",
-				"type": "error"
-			},
-			{
-				"inputs": [],
 				"name": "BalanceQueryForZeroAddress",
 				"type": "error"
 			},
@@ -63,11 +58,6 @@
 			{
 				"inputs": [],
 				"name": "TransferCallerNotOwnerNorApproved",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "TransferFailed",
 				"type": "error"
 			},
 			{
@@ -234,6 +224,25 @@
 					{
 						"indexed": false,
 						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "quantity",
+						"type": "uint256"
+					}
+				],
+				"name": "UnjiMinted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
 						"name": "account",
 						"type": "address"
 					}
@@ -244,6 +253,19 @@
 			{
 				"stateMutability": "payable",
 				"type": "fallback"
+			},
+			{
+				"inputs": [],
+				"name": "AIRDROP_ROOT",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
 			},
 			{
 				"inputs": [],
@@ -286,22 +308,47 @@
 			},
 			{
 				"inputs": [],
-				"name": "WHITELIST_COLLECTION_SIZE",
+				"name": "WHITELIST_ROOT",
 				"outputs": [
 					{
-						"internalType": "uint16",
+						"internalType": "bytes32",
 						"name": "",
-						"type": "uint16"
+						"type": "bytes32"
 					}
 				],
 				"stateMutability": "view",
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "addWhitelist",
+				"inputs": [
+					{
+						"internalType": "bytes32[]",
+						"name": "proof",
+						"type": "bytes32[]"
+					}
+				],
+				"name": "airDrop",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "airdropClaimed",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -319,7 +366,7 @@
 				],
 				"name": "approve",
 				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -434,6 +481,24 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "quantity",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "refAddress",
+						"type": "address"
+					}
+				],
+				"name": "mintRef",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "name",
 				"outputs": [
@@ -492,19 +557,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "address[]",
-						"name": "addrs",
-						"type": "address[]"
-					}
-				],
-				"name": "removeWhitelist",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
 				"inputs": [],
 				"name": "renounceOwnership",
 				"outputs": [],
@@ -531,7 +583,7 @@
 				],
 				"name": "safeTransferFrom",
 				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -558,6 +610,19 @@
 					}
 				],
 				"name": "safeTransferFrom",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "newRoot",
+						"type": "bytes32"
+					}
+				],
+				"name": "setAirdropRoot",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -609,12 +674,12 @@
 			{
 				"inputs": [
 					{
-						"internalType": "bool",
-						"name": "_whitelist",
-						"type": "bool"
+						"internalType": "bytes32",
+						"name": "newRoot",
+						"type": "bytes32"
 					}
 				],
-				"name": "setWhitelist",
+				"name": "setWhitelistRoot",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -703,7 +768,7 @@
 				],
 				"name": "transferFrom",
 				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -722,57 +787,17 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "whitelist",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "whitelistActive",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "whitelistCounter",
-				"outputs": [
+						"internalType": "bytes32[]",
+						"name": "proof",
+						"type": "bytes32[]"
+					},
 					{
 						"internalType": "uint256",
-						"name": "",
+						"name": "quantity",
 						"type": "uint256"
 					}
 				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint16",
-						"name": "quantity",
-						"type": "uint16"
-					}
-				],
-				"name": "whitelistMint",
+				"name": "whiteListMint",
 				"outputs": [],
 				"stateMutability": "payable",
 				"type": "function"
@@ -861,6 +886,12 @@
 				"transferOwnership(address)": {
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
 				},
+				"whiteListMint(bytes32[],uint256)": {
+					"params": {
+						"proof": "Merkle proof that you are in whitelist",
+						"quantity": "Number of tokens to mint"
+					}
+				},
 				"withdraw()": {
 					"details": "`transfer` and `send` assume constant gas prices. This function is onlyOwner, so we accept the reentrancy risk that `.call.value` carries."
 				}
@@ -877,11 +908,6 @@
 				"ApprovalQueryForNonexistentToken()": [
 					{
 						"notice": "The token does not exist."
-					}
-				],
-				"ApproveToCaller()": [
-					{
-						"notice": "The caller cannot approve to their own address."
 					}
 				],
 				"BalanceQueryForZeroAddress()": [
@@ -924,11 +950,6 @@
 						"notice": "The caller must own the token or be an approved operator."
 					}
 				],
-				"TransferFailed()": [
-					{
-						"notice": "Transfer failed"
-					}
-				],
 				"TransferFromIncorrectOwner()": [
 					{
 						"notice": "The token must be owned by `from`."
@@ -961,6 +982,9 @@
 				"setMintPhase(uint8)": {
 					"notice": "Set the mint phaseUse restricted to contract owner"
 				},
+				"whiteListMint(bytes32[],uint256)": {
+					"notice": "Mint a quantity of tokens during whitelist mint phase"
+				},
 				"withdraw()": {
 					"notice": "Withdraw all funds to the contract owners addressUse restricted to contract owner"
 				}
@@ -970,7 +994,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"contracts/Unji.sol": "CryptoUnji"
+			"contracts/Unji-ref.sol": "CryptoUnji"
 		},
 		"evmVersion": "london",
 		"libraries": {},
@@ -1000,14 +1024,6 @@
 				"dweb:/ipfs/QmSPwPxX7d6TTWakN5jy5wsaGkS1y9TW8fuhGSraMkLk2B"
 			]
 		},
-		"@openzeppelin/contracts/security/ReentrancyGuard.sol": {
-			"keccak256": "0x0e9621f60b2faabe65549f7ed0f24e8853a45c1b7990d47e8160e523683f3935",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://287a2f8d5814dd0f05f22b740f18ca8321acc21c9bd03a6cb2203ea626e2f3f2",
-				"dweb:/ipfs/QmZRQv9iuwU817VuqkA2WweiaibKii69x9QxYBBEfbNEud"
-			]
-		},
 		"@openzeppelin/contracts/utils/Context.sol": {
 			"keccak256": "0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7",
 			"license": "MIT",
@@ -1016,28 +1032,44 @@
 				"dweb:/ipfs/QmRK2Y5Yc6BK7tGKkgsgn3aJEQGi5aakeSPZvS65PV8Xp3"
 			]
 		},
-		"contracts/Unji.sol": {
-			"keccak256": "0x5678cc422041d78981d6c136da7ce90a4b48609fe2f3ba75c3a7d1cfd0d9af7e",
+		"@openzeppelin/contracts/utils/cryptography/MerkleProof.sol": {
+			"keccak256": "0x596ed72a251d391b814a4aa19d7acb02ebdcc92ba27d3fff74a6f0c158b12ab7",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://4049fef0ad911b07b1a3fd1a57309e0deee8f964465c1efaaa3b23117a6201f1",
-				"dweb:/ipfs/QmQWqbHSQ5nEwVoC4sRQ8fsRqYbdaVoJbEvGoMiDXtz948"
+				"bzz-raw://d5f49013d50b1011c842f76e96f3c3f146ca7cb15084c8805575e0e0e1a5c700",
+				"dweb:/ipfs/QmQ3n5qiuioUA74heD6ZddNkYg1kYihjQBNcy9zgwYXKgM"
+			]
+		},
+		"contracts/Unji-ref.sol": {
+			"keccak256": "0x70d0db291031f60004d6e1e480c9125b6fba9dd000a2fcaba86e6acd1e5ce913",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://38337f2df661ff895e086a733e06f295de536afbc5645f150a7b620210edb7e2",
+				"dweb:/ipfs/QmenZC5kiVKeXCbDbb1AEHxBeEhYjKkJmbqrzJ5MBiB22z"
 			]
 		},
 		"erc721a/contracts/ERC721A.sol": {
-			"keccak256": "0x38055fa99acc16da1d33b3917194b9257a03be4a22c516d967df544d7e15368d",
+			"keccak256": "0x23116c16976b7d8c0c714ba1b38ae6b16c16fc90ec69b568fb1ebf1bc063e01c",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://bb6a438191b95c79adde0915203a87c69f330855ac0adf6e618dbb387aeb93f7",
-				"dweb:/ipfs/QmeftASprpvorq9A7j8UzY5SDEvmzLpXRVxHAdNmW4wiMA"
+				"bzz-raw://b7874e48418b55b9d718680915454f2b0054d19d2a387e123b0c139294d0e809",
+				"dweb:/ipfs/QmdryJHATT4R454JY8FXCE5qTxanYWfjGKGMv5U6YJntWy"
 			]
 		},
 		"erc721a/contracts/IERC721A.sol": {
-			"keccak256": "0x9c94731c43a2320e54f9128ad972659b07536d908bc08490213616e2dc26dea9",
+			"keccak256": "0xa31dfe2635a25f899e279befef27ffcc02fd16e636c58d4c251a303f2355f7ad",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8b48d00b493a1573e0378a69740c88280835515dec1360394a708e20df36bc27",
-				"dweb:/ipfs/QmZqvycpgbLJ3oeBqhNTExQeqNtBx97kBkt9xSESjTrgq2"
+				"bzz-raw://284680b4fdbf52b2aa888f7988447568ee82c5d1585c1535d985ff25153bc3b9",
+				"dweb:/ipfs/QmTWfDch6XJMwVLA4CY2pMedzrLWoN8ZdgYZ1UbRzesysz"
+			]
+		},
+		"hardhat/console.sol": {
+			"keccak256": "0x60b0215121bf25612a6739fb2f1ec35f31ee82e4a8216c032c8243d904ab3aa9",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6e29880d33dd479bb046ba306993d26ccb779a4b1d94a046cb3567f22948bb4d",
+				"dweb:/ipfs/QmfTY1qzPt5C63Wc7y6JqfZr5899NRvXYdCpyLzR5FXQic"
 			]
 		}
 	},

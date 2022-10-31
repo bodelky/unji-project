@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ERC721A Contracts v4.2.2
+// ERC721A Contracts v4.2.3
 // Creator: Chiru Labs
 
 pragma solidity ^0.8.4;
@@ -17,11 +17,6 @@ interface IERC721A {
      * The token does not exist.
      */
     error ApprovalQueryForNonexistentToken();
-
-    /**
-     * The caller cannot approve to their own address.
-     */
-    error ApproveToCaller();
 
     /**
      * Cannot query the balance for the zero address.
@@ -175,7 +170,7 @@ interface IERC721A {
         address to,
         uint256 tokenId,
         bytes calldata data
-    ) external;
+    ) external payable;
 
     /**
      * @dev Equivalent to `safeTransferFrom(from, to, tokenId, '')`.
@@ -184,7 +179,7 @@ interface IERC721A {
         address from,
         address to,
         uint256 tokenId
-    ) external;
+    ) external payable;
 
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
@@ -206,7 +201,7 @@ interface IERC721A {
         address from,
         address to,
         uint256 tokenId
-    ) external;
+    ) external payable;
 
     /**
      * @dev Gives permission to `to` to transfer `tokenId` token to another account.
@@ -222,7 +217,7 @@ interface IERC721A {
      *
      * Emits an {Approval} event.
      */
-    function approve(address to, uint256 tokenId) external;
+    function approve(address to, uint256 tokenId) external payable;
 
     /**
      * @dev Approve or remove `operator` as an operator for the caller.
