@@ -24,7 +24,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
 
     string private baseURI;
 
-    bytes32 public AIRDROP_ROOT = 0x74f4666169faccda89a45d47ab1997a62f24c3cd534a01539db8f0e40d3eb8b1;
     bytes32 public WHITELIST_ROOT = 0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c;
     mapping(address => bool) public airdropClaimed;
 
@@ -63,14 +62,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     // MINT FUNCTIONS //
     ////////////////////
 
-    function airDrop(bytes32[] memory proof) external {
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(proof, AIRDROP_ROOT, leaf), "Not in Airdrop");
-        require(!airdropClaimed[msg.sender], "Already Claimed");
-        _safeMint(msg.sender, 1);
-        airdropClaimed[msg.sender] = true;
-        emit UnjiMinted(msg.sender, 1);
-    }
+
 
     function mintRef(uint256 quantity, address refAddress) external payable inMintPhase(MintPhase.PUBLIC_SALE) {
         require(balanceOf(refAddress) > 0, "This referral has not hold Unji yet!");
@@ -103,10 +95,13 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     function mint(uint16 quantity) external payable inMintPhase(MintPhase.PUBLIC_SALE) mintCondition(quantity) {
         uint256 price = quantity * MINT_PRICE_PUBLIC;
         require(msg.value >= price, "Insufficient value");
-
         _safeMint(msg.sender, quantity);
         emit UnjiMinted(msg.sender, quantity);
+    }
 
+    function airDrop(address to, uint256 quantity) external onlyOwner {
+        _safeMint(to, quantity);
+        emit UnjiMinted(to, quantity);
     }
 
     //////////////////////
