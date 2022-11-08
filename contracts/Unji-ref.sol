@@ -8,15 +8,15 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "hardhat/console.sol";
 
-//            _  .-')                 _ (`-.  .-') _                                  .-') _                    
-//           ( \( -O )               ( (OO  )(  OO) )                                ( OO ) )                   
-//    .-----. ,------.   ,--.   ,--._.`     \/     '._  .-'),-----.  ,--. ,--.   ,--./ ,--,'      ,--.  ,-.-')  
-//   '  .--./ |   /`. '   \  `.'  /(__...--''|'--...__)( OO'  .-.  ' |  | |  |   |   \ |  |\  .-')| ,|  |  |OO) 
-//   |  |('-. |  /  | | .-')     /  |  /  | |'--.  .--'/   |  | |  | |  | | .-') |    \|  | )( OO |(_|  |  |  \ 
-//  /_) |OO  )|  |_.' |(OO  \   /   |  |_.' |   |  |   \_) |  |\|  | |  |_|( OO )|  .     |/ | `-'|  |  |  |(_/ 
-//  ||  |`-'| |  .  '.' |   /  /\_  |  .___.'   |  |     \ |  | |  | |  | | `-' /|  |\    |  ,--. |  | ,|  |_.' 
-// (_'  '--'\ |  |\  \  `-./  /.__) |  |        |  |      `'  '-'  '('  '-'(_.-' |  | \   |  |  '-'  /(_|  |    
-//    `-----' `--' '--'   `--'      `--'        `--'        `-----'   `-----'    `--'  `--'   `-----'   `--'  
+//            _  .-')                 _ (`-.  .-') _                                  .-') _
+//           ( \( -O )               ( (OO  )(  OO) )                                ( OO ) )
+//    .-----. ,------.   ,--.   ,--._.`     \/     '._  .-'),-----.  ,--. ,--.   ,--./ ,--,'      ,--.  ,-.-')
+//   '  .--./ |   /`. '   \  `.'  /(__...--''|'--...__)( OO'  .-.  ' |  | |  |   |   \ |  |\  .-')| ,|  |  |OO)
+//   |  |('-. |  /  | | .-')     /  |  /  | |'--.  .--'/   |  | |  | |  | | .-') |    \|  | )( OO |(_|  |  |  \
+//  /_) |OO  )|  |_.' |(OO  \   /   |  |_.' |   |  |   \_) |  |\|  | |  |_|( OO )|  .     |/ | `-'|  |  |  |(_/
+//  ||  |`-'| |  .  '.' |   /  /\_  |  .___.'   |  |     \ |  | |  | |  | | `-' /|  |\    |  ,--. |  | ,|  |_.'
+// (_'  '--'\ |  |\  \  `-./  /.__) |  |        |  |      `'  '-'  '('  '-'(_.-' |  | \   |  |  '-'  /(_|  |
+//    `-----' `--' '--'   `--'      `--'        `--'        `-----'   `-----'    `--'  `--'   `-----'   `--'
 
 contract CryptoUnji is ERC721A, Ownable, Pausable {
     enum MintPhase {
@@ -31,13 +31,11 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     uint256 public constant MINT_PRICE_PUBLIC = 0.05 ether; // 0.05
     uint256 public constant MINT_PRICE_WHITELIST = 0.025 ether; // 0.025
 
-
     string private baseURI;
 
-    bytes32 public WHITELIST_ROOT = 0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c;
+    bytes32 public WHITELIST_ROOT =
+        0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c;
     mapping(address => bool) public airdropClaimed;
-
-
 
     /////////////////////
     // EVENT FUNCTIONS //
@@ -51,10 +49,12 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
 
     modifier mintCondition(uint256 quantity) {
         require(totalSupply() < TOTAL_COLLECTION_SIZE, "NFT Already sold out");
-        require(totalSupply() + quantity <= TOTAL_COLLECTION_SIZE, "Cannot mint over supply");
+        require(
+            totalSupply() + quantity <= TOTAL_COLLECTION_SIZE,
+            "Cannot mint over supply"
+        );
         _;
     }
-
 
     modifier inMintPhase(MintPhase _mintPhase) {
         require(mintPhase == _mintPhase, "Not correct mint phase");
@@ -67,15 +67,19 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         _safeMint(msg.sender, 6);
     }
 
-
     ////////////////////
     // MINT FUNCTIONS //
     ////////////////////
 
-
-
-    function mintRef(uint256 quantity, address refAddress) external payable inMintPhase(MintPhase.PUBLIC_SALE) {
-        require(balanceOf(refAddress) > 0, "This referral has not hold Unji yet!");
+    function mintRef(uint256 quantity, address refAddress)
+        external
+        payable
+        inMintPhase(MintPhase.PUBLIC_SALE)
+    {
+        require(
+            balanceOf(refAddress) > 0,
+            "This referral has not hold Unji yet!"
+        );
         uint256 price = (MINT_PRICE_PUBLIC * quantity * 95) / 100;
         uint256 fee = (MINT_PRICE_PUBLIC * quantity * 5) / 100;
         require(msg.value >= price);
@@ -89,9 +93,16 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
      * @param proof Merkle proof that you are in whitelist
      * @param quantity Number of tokens to mint
      */
-    function whiteListMint(bytes32[] memory proof, uint256 quantity) external payable inMintPhase(MintPhase.WHITELIST_SALE){
+    function whiteListMint(bytes32[] memory proof, uint256 quantity)
+        external
+        payable
+        inMintPhase(MintPhase.WHITELIST_SALE)
+    {
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(proof, WHITELIST_ROOT, leaf), "Not in Whitelist");
+        require(
+            MerkleProof.verify(proof, WHITELIST_ROOT, leaf),
+            "Not in Whitelist"
+        );
         uint256 price = quantity * MINT_PRICE_WHITELIST;
         require(msg.value >= price, "Insufficient value");
         _safeMint(msg.sender, quantity);
@@ -102,7 +113,12 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
      * @notice Mint a quantity of tokens during public mint phase
      * @param quantity Number of tokens to mint
      */
-    function mint(uint16 quantity) external payable inMintPhase(MintPhase.PUBLIC_SALE) mintCondition(quantity) {
+    function mint(uint16 quantity)
+        external
+        payable
+        inMintPhase(MintPhase.PUBLIC_SALE)
+        mintCondition(quantity)
+    {
         uint256 price = quantity * MINT_PRICE_PUBLIC;
         require(msg.value >= price, "Insufficient value");
         _safeMint(msg.sender, quantity);
@@ -136,14 +152,9 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         baseURI = _baseTokenURI;
     }
 
-    function setAirdropRoot(bytes32 newRoot) external onlyOwner {
-        AIRDROP_ROOT = newRoot;
-    }
-
     function setWhitelistRoot(bytes32 newRoot) external onlyOwner {
         WHITELIST_ROOT = newRoot;
     }
-
 
     //////////////////////
     // GETTER FUNCTIONS //
@@ -161,13 +172,16 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     /////////////////////
 
     /*
-    */
-    function bulkTransfer(address from, address to, uint256[] memory tokenIds) public {
-        for(uint i = 0; i < tokenIds.length ; i++ ) {
+     */
+    function bulkTransfer(
+        address from,
+        address to,
+        uint256[] memory tokenIds
+    ) public {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
             safeTransferFrom((from), to, tokenIds[i]);
         }
     }
-
 
     /**
      * @notice Withdraw all funds to the contract owners address
@@ -196,17 +210,13 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
      */
     receive() external payable {
         revert NotImplemented();
-        
     }
 }
-
-
 
 /**
  * Transfer failed
  */
 error TransferFailed();
-
 
 /**
  * Function not implemented
