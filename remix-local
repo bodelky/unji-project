@@ -1,1 +1,5 @@
 remixd -s C:\Users\bodel\Desktop\blockchain\unji-project> --remix-ide https://remix.ethereum.org
+
+
+remixd -s /Users/mickey/Desktop/projects/external-projects/unji-project --remix-ide https://remix.ethereum.org
+

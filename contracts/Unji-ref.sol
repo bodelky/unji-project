@@ -64,7 +64,8 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     /*
      */
     constructor() ERC721A("CryptoUnji", "CUNJI") {
-        _safeMint(msg.sender, 6);
+        // 7 NFTs for developer team
+        _safeMint(msg.sender, 7);
     }
 
     ////////////////////
@@ -80,9 +81,9 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
             balanceOf(refAddress) > 0,
             "This referral has not hold Unji yet!"
         );
-        uint256 price = (MINT_PRICE_PUBLIC * quantity * 95) / 100;
-        uint256 fee = (MINT_PRICE_PUBLIC * quantity * 5) / 100;
-        require(msg.value >= price);
+        uint256 price = MINT_PRICE_PUBLIC * quantity;
+        require(msg.value >= price, "Insufficient balance");
+        uint256 fee = (price * 5) / 100; // 5%
         _safeMint(msg.sender, quantity);
         emit UnjiMinted(msg.sender, quantity);
         payable(refAddress).transfer(fee);
