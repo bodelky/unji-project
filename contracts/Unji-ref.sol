@@ -125,9 +125,16 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         emit UnjiMinted(msg.sender, quantity);
     }
 
-    function airDrop(address to, uint256 quantity) external onlyOwner {
-        _safeMint(to, quantity);
-        emit UnjiMinted(to, quantity);
+    function batchAirdrop(address[] memory _tos, uint256[] memory quantities)
+        external
+        onlyOwner
+    {
+        require(_tos.length == quantities.length, "Mismatch array");
+        uint256 length = _tos.length;
+        for (uint256 i; i < length; i++) {
+            _safeMint(_tos[i], quantities[i]);
+            emit UnjiMinted(_tos[i], quantities[i]);
+        }
     }
 
     //////////////////////
