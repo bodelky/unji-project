@@ -38,7 +38,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     mapping(address => bool) public airdropClaimed;
 
 
-
     /////////////////////
     // EVENT FUNCTIONS //
     /////////////////////
@@ -71,18 +70,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     ////////////////////
     // MINT FUNCTIONS //
     ////////////////////
-
-
-
-    function mintRef(uint256 quantity, address refAddress) external payable inMintPhase(MintPhase.PUBLIC_SALE) {
-        require(balanceOf(refAddress) > 0, "This referral has not hold Unji yet!");
-        uint256 price = (MINT_PRICE_PUBLIC * quantity * 95) / 100;
-        uint256 fee = (MINT_PRICE_PUBLIC * quantity * 5) / 100;
-        require(msg.value >= price);
-        _safeMint(msg.sender, quantity);
-        emit UnjiMinted(msg.sender, quantity);
-        payable(refAddress).transfer(fee);
-    }
 
     /**
      * @notice Mint a quantity of tokens during whitelist mint phase
@@ -181,7 +168,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     }
 
     function _startTokenId() internal pure override returns (uint256) {
-        return 1;
+        return 0;
     }
 
     /**
