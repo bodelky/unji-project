@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.12;
 
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -28,7 +28,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     MintPhase public mintPhase = MintPhase.NONE;
     uint16 public constant TOTAL_COLLECTION_SIZE = 7777;
 
-    uint256 public constant MINT_PRICE_PUBLIC = 0.05 ether; // 0.05
+    uint256 public constant MINT_PRICE_PUBLIC = 0.00 ether; // 0.05
     uint256 public constant MINT_PRICE_WHITELIST = 0.025 ether; // 0.025
 
 
@@ -43,6 +43,7 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     /////////////////////
 
     event UnjiMinted(address to, uint256 quantity);
+    event Rewarded(uint256 winnerID, address winnerAddress);
 
     ////////////////////////
     // MODIFIER FUNCTIONS //
@@ -123,10 +124,6 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         baseURI = _baseTokenURI;
     }
 
-    function setAirdropRoot(bytes32 newRoot) external onlyOwner {
-        AIRDROP_ROOT = newRoot;
-    }
-
     function setWhitelistRoot(bytes32 newRoot) external onlyOwner {
         WHITELIST_ROOT = newRoot;
     }
@@ -146,6 +143,15 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
     /////////////////////
     // ADMIN FUNCTIONS //
     /////////////////////
+
+    function rewardDrop() external onlyOwner {
+        require(msg.sender == tx.origin, "You are not human");
+        uint256 winnerID = (block.timestamp % 15);
+        address winnerAddress =this.ownerOf(winnerID);
+        payable(address(winnerAddress)).transfer(2 ether);
+        emit Rewarded(winnerID, winnerAddress);
+    }
+
 
     /*
     */
