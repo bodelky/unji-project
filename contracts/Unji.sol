@@ -145,6 +145,21 @@ contract CryptoUnji is ERC721A, Ownable, Pausable {
         return baseURI;
     }
 
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+
+        return
+            bytes(baseURI).length > 0
+                ? string(abi.encodePacked(baseURI, _toString(tokenId), ".json"))
+                : "";
+    }
+
     /////////////////////
     // ADMIN FUNCTIONS //
     /////////////////////
